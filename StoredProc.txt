@@ -1,0 +1,33 @@
+ALTER PROCEDURE  "FTSI_IMPORT_SO_MULTIDISCOUNT_LEVEL"
+(
+	IN 	Barcode NVARCHAR(50),
+	CardCode NVARCHAR(30),
+	DiscLevel NVARCHAR(1),
+	PostingDate DATE
+)
+
+--CALL "FTSI_IMPORT_SO_MULTIDISCOUNT_LEVEL" ('8410028225101', 'C000121', '3', to_date('10/18/2022', 'MM/dd/yyyy'));
+
+LANGUAGE SQLSCRIPT
+
+AS
+
+BEGIN 
+
+
+SELECT 	OBDS."U_BasePrice",
+		OBDS."U_DiscType",
+		OBDS."U_FrghtCode",
+		BDL1."LineId",
+		BDS1."U_DiscRate"
+		
+		
+FROM OITM INNER JOIN OBCD ON OITM."ItemCode" = OBCD."ItemCode" 
+  		  INNER JOIN "@FTBDS1" BDS1 ON OITM."ItemCode" = BDS1."U_ItemCode"
+  		  INNER JOIN "@FTOBDS" OBDS ON BDS1."DocEntry" = OBDS."DocEntry"
+	      INNER JOIN "@FTOBDL"  OBDL ON OBDS."U_CardCode" = OBDL."Code" 
+	 	  INNER JOIN "@FTBDL1" BDL1 ON OBDL."Code" = BDL1."Code" AND OBDS."U_DiscType" = BDL1."U_DiscType"
+	 	   	       					  
+WHERE OBDS."U_Status" = 'A' AND OBCD."BcdCode" = :Barcode AND OBDL."Code" = :CardCode AND BDL1."LineId" = :DiscLevel AND BDS1."U_PrdFrom" <= :PostingDate AND BDS1."U_PrdTo" >= :PostingDate;
+
+END;
